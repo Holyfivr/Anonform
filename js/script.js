@@ -1,3 +1,6 @@
+
+const EMAIL = "java25@fake.se";
+const ADMIN_EMAIL = "admin@fake.se";
 // auth
 import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js";
 
@@ -52,15 +55,6 @@ closeModalBtn.style.borderRadius = "6px";
 closeModalBtn.style.padding = "8px 16px";
 closeModalBtn.style.cursor = "pointer";
 
-const emailInput = document.createElement("input");
-emailInput.type = "email";
-emailInput.placeholder = "E-post";
-emailInput.style.marginBottom = "12px";
-emailInput.style.width = "100%";
-emailInput.style.padding = "8px";
-emailInput.style.borderRadius = "6px";
-emailInput.style.border = "1px solid #ccc";
-
 const passInput = document.createElement("input");
 passInput.type = "password";
 passInput.placeholder = "Lösenord";
@@ -85,7 +79,6 @@ loginError.style.marginBottom = "8px";
 loginError.style.display = "none";
 
 modal.appendChild(loginError);
-modal.appendChild(emailInput);
 modal.appendChild(passInput);
 modal.appendChild(doLoginBtn);
 modal.appendChild(closeModalBtn);
@@ -102,15 +95,14 @@ closeModalBtn.addEventListener("click", () => {
 
 // login
 doLoginBtn.addEventListener("click", () => {
-	const email = emailInput.value.trim();
 	const pass = passInput.value;
-	if (!email || !pass) {
-		loginError.textContent = "Fyll i e-post och lösenord.";
+	if (!pass) {
+		loginError.textContent = "Fyll i lösenord.";
 		loginError.style.display = "block";
 		return;
 	}
 	const auth = getAuth(app);
-	signInWithEmailAndPassword(auth, email, pass)
+	signInWithEmailAndPassword(auth, ADMIN_EMAIL, pass)
 		.then(() => {
 			loginError.style.display = "none";
 			showPopup("Inloggning lyckades!");
@@ -118,7 +110,7 @@ doLoginBtn.addEventListener("click", () => {
 			showAllMessages();
 		})
 		.catch(() => {
-			loginError.textContent = "Fel e-post eller lösenord.";
+			loginError.textContent = "Fel lösenord.";
 			loginError.style.display = "block";
 		});
 });
@@ -143,7 +135,8 @@ function showAllMessages() {
 	listModal.style.padding = "32px 24px";
 	listModal.style.borderRadius = "12px";
 	listModal.style.boxShadow = "0 2px 16px rgba(0,0,0,0.2)";
-	listModal.style.minWidth = "340px";
+	listModal.style.minWidth = "1000px";
+	listModal.style.maxWidth = "1000px";
 	listModal.style.maxHeight = "70vh";
 	listModal.style.overflowY = "auto";
 
@@ -195,18 +188,43 @@ const root = document.getElementById("root");
 const formContainer = document.createElement("div");
 formContainer.className = "form-container";
 
+// headline
+const heading = document.createElement("h2");
+heading.textContent = "Anonym Feedback";
+heading.style.marginBottom = "32px";
+formContainer.appendChild(heading);
+
+// Textarea
 const textarea = document.createElement("textarea");
 textarea.className = "form-input";
 textarea.placeholder = "Skriv ditt meddelande här...";
+formContainer.appendChild(textarea);
+
+// password field and btn
+const row = document.createElement("div");
+row.style.display = "flex";
+row.style.width = "100%";
+row.style.gap = "16px";
+row.style.marginTop = "16px";
+
+const passwordInput = document.createElement("input");
+passwordInput.type = "text";
+passwordInput.placeholder = "Lösenord";
+passwordInput.style.flex = "1";
+passwordInput.style.padding = "12px";
+passwordInput.style.borderRadius = "8px";
+passwordInput.style.border = "1px solid #ccc";
+passwordInput.style.fontSize = "1.1rem";
 
 const btn = document.createElement("button");
 btn.className = "form-btn";
 btn.textContent = "Skicka";
+btn.style.flex = "0 0 120px";
 
-formContainer.appendChild(textarea);
-formContainer.appendChild(btn);
+row.appendChild(passwordInput);
+row.appendChild(btn);
+formContainer.appendChild(row);
 root.appendChild(formContainer);
-btn.textContent = "Skicka";
 
 // Import Firebase
 import { getDatabase, ref, push, onValue } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-database.js";
@@ -224,30 +242,45 @@ btn.addEventListener("click", () => {
 		showPopup("Vänta 1 minut innan du skickar igen.", true);
 		return;
 	}
-	if (textarea.value.trim() !== "") {
-		push(messagesRef, { text: textarea.value })
-			.then(() => {
-				textarea.value = "";
-				showPopup("Meddelandet skickades!");
-				canSend = false;
-				btn.disabled = true;
-				let seconds = 60;
-				btn.textContent = `Vänta (${seconds})`;
-				timerId = setInterval(() => {
-					seconds--;
-					btn.textContent = `Vänta (${seconds})`;
-					if (seconds <= 0) {
-						clearInterval(timerId);
-						btn.disabled = false;
-						btn.textContent = "Skicka";
-						canSend = true;
-					}
-				}, 1000);
-			})
-			.catch(() => {
-				showPopup("Fel: Kunde inte skicka meddelandet.", true);
-			});
+	if (textarea.value.trim() === "") {
+		showPopup("Du måste skriva ett meddelande.", true);
+		return;
 	}
+	const password = passwordInput.value;
+	if (!password) {
+		showPopup("Du måste ange lösenord.", true);
+		return;
+	}
+	const auth = getAuth(app);
+	signInWithEmailAndPassword(auth, EMAIL, password)
+		.then(() => {
+			push(messagesRef, { text: textarea.value })
+				.then(() => {
+					textarea.value = "";
+					passwordInput.value = "";
+					showPopup("Meddelandet skickades!");
+					canSend = false;
+					btn.disabled = true;
+					let seconds = 60;
+					btn.textContent = `Vänta (${seconds})`;
+					timerId = setInterval(() => {
+						seconds--;
+						btn.textContent = `Vänta (${seconds})`;
+						if (seconds <= 0) {
+							clearInterval(timerId);
+							btn.disabled = false;
+							btn.textContent = "Skicka";
+							canSend = true;
+						}
+					}, 1000);
+				})
+				.catch(() => {
+					showPopup("Fel: Kunde inte skicka meddelandet.", true);
+				});
+		})
+		.catch(() => {
+			showPopup("Fel lösenord!", true);
+		});
 });
 
 function showPopup(message, isError = false) {
