@@ -162,12 +162,23 @@ function showAllMessages() {
 
 	onValue(messagesRef, (snapshot) => {
 		ul.innerHTML = "";
+		const items = [];
 		snapshot.forEach(child => {
 			const li = document.createElement("li");
 			li.textContent = child.val().text;
 			li.style.padding = "8px 0";
-			li.style.borderBottom = "1px solid #eee";
+			items.push(li);
+		});
+		// Visa senaste överst
+		items.reverse().forEach((li, idx) => {
 			ul.appendChild(li);
+			if (idx < items.length - 1) {
+				const sep = document.createElement("hr");
+				sep.style.border = "none";
+				sep.style.borderTop = "1px solid #444";
+				sep.style.margin = "0 0 0 0";
+				ul.appendChild(sep);
+			}
 		});
 	}, { onlyOnce: true });
 
