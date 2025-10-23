@@ -169,7 +169,7 @@ function showAllMessages() {
 			li.style.padding = "8px 0";
 			items.push(li);
 		});
-		// Visa senaste överst
+		// show newest msg at top
 		items.reverse().forEach((li, idx) => {
 			ul.appendChild(li);
 			if (idx < items.length - 1) {
